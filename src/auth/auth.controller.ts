@@ -1,13 +1,23 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
 import { GetSessionInfoDto, SignInDto, SignUpDto } from './dto/auth.dto';
 import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { AuthService } from './auth.service';
+import { CookieService } from './cookie/cookie.service';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly cookieService: CookieService
+  ) {}
+
   @Post('sign-up')
   @ApiCreatedResponse()
-  signUp(@Body() body: SignUpDto) {
-    return body;
+  async signUp(@Body() body: SignUpDto, @Res({ passthrough: true }) res: Response) {
+    const { accessToken } = await this.authService.signUp(body);
+
+    this.cookieService.setToken(res, accessToken);
   }
 
   @Post('sign-in')

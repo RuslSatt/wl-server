@@ -4,9 +4,17 @@ import { AuthService } from './auth.service';
 import { PasswordService } from './password/password.service';
 import { CookieService } from './cookie/cookie.service';
 import { UserModule } from 'src/user/user.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [UserModule],
+  imports: [
+    UserModule,
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1d' }
+    })
+  ],
   controllers: [AuthController],
   providers: [AuthService, PasswordService, CookieService]
 })
