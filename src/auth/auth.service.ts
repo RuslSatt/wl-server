@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { SignInDto, SignUpDto } from './dto/auth.dto';
 import { PasswordService } from './password/password.service';
@@ -31,7 +31,23 @@ export class AuthService {
     return { accessToken };
   }
 
-  signIn(data: SignInDto) {
-    return data;
+  async signIn(data: SignInDto) {
+    const { email, password } = data;
+
+    const user = await this.userService.findByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    const hash = this.passwordService.getHash(password, user.salt);
+
+    if (hash !== user.hash) {
+      throw new UnauthorizedException();
+    }
+
+    const accessToken = await this.jwtService.signAsync({ id: user.id, email: user.email });
+
+    return { accessToken };
   }
 }
